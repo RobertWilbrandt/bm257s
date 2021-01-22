@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+import bm257s
+
+
+def main():
+    mm = bm257s.BM257sSerialInterface()
+
+
+if __name__ == "__main__":
+    main()
