@@ -9,7 +9,8 @@ def main():
     """Start minimal bm257s console
     """
     with bm257s.BM257sSerialInterface() as mm:
-        pass
+        while 1:
+            mm.read_lcd()
 
 
 if __name__ == "__main__":
