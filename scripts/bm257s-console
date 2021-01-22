@@ -10,7 +10,11 @@ def main():
     """
     with bm257s.BM257sSerialInterface() as mm:
         while 1:
-            print(mm.read())
+            measurement = mm.read()
+            if measurement is not None:
+                print(f"{measurement[0]}: {measurement[1]}")
+            else:
+                print("Invalid measurement")
 
 
 if __name__ == "__main__":

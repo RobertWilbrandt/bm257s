@@ -12,11 +12,20 @@ def parse_lcd(data):
     :rtype: tuple
     """
     segment_temp_celsius = (True, False, False, True, True, True, False)
+    segment_temp_fahrenheit = (True, False, False, False, True, True, True)
 
     segments = [lcd_segment(data, i) for i in range(0, 4)]
 
     if segments[3] == segment_temp_celsius:
-        return (Measurement.TEMPERATURE, TemperatureMeasurement())
+        return (
+            Measurement.TEMPERATURE,
+            TemperatureMeasurement(unit=TemperatureMeasurement.UNIT_CELSIUS),
+        )
+    if segments[3] == segment_temp_fahrenheit:
+        return (
+            Measurement.TEMPERATURE,
+            TemperatureMeasurement(unit=TemperatureMeasurement.UNIT_FAHRENHEIT),
+        )
     return None
 
 
@@ -52,8 +61,19 @@ class Measurement:
 
 
 class TemperatureMeasurement:
-    def __init__(self):
-        pass
+    UNIT_CELSIUS = 1
+    UNIT_FAHRENHEIT = 2
+
+    def __init__(self, unit):
+        self.unit = unit
+
+    def __str__(self):
+        if self.unit == self.UNIT_CELSIUS:
+            return "?? °C"
+        if self.unit == self.UNIT_FAHRENHEIT:
+            return "?? F"
+
+        return self
 
 
 class BM257sSerialInterface:
