@@ -10,7 +10,7 @@ def main():
     """
     with bm257s.BM257sSerialInterface() as mm:
         while 1:
-            mm.read_lcd()
+            print(mm.read())
 
 
 if __name__ == "__main__":
