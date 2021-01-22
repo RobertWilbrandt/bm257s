@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+"""Minimal console for monitoring brymen bm257s multimeter data"""
+# pylint: disable=invalid-name
 
 import bm257s
 
 
 def main():
-    mm = bm257s.BM257sSerialInterface()
+    """Start minimal bm257s console
+    """
+    with bm257s.BM257sSerialInterface() as mm:
+        pass
 
 
 if __name__ == "__main__":
