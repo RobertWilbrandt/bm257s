@@ -1,60 +1,48 @@
 """Representation of bm257s LCD"""
 
 
-class Segment:
-    """Representation of occupancy of a single LCD display segment
+def segment_from_data(data, pos):
+    """Reads a segment configuration from a data bytestring
 
-    :param segments: Occupancy information of display segment
-    :type segments: tuple
+    :param data: Received multimeter data, aligned to 15-byte package
+    :type data: bytes
+    :param pos: Position of segment to read
+    :type pos: int
+
+    :return: Segment configuration
+    :rtype: tuple
     """
-
-    LETTER_C = (True, False, False, True, True, True, False)
-    LETTER_F = (True, False, False, False, True, True, True)
-
-    DIGITS = [
-        (True, True, True, True, True, True, False),  # 0
-        (False, True, True, False, False, False, False),  # 1
-        (True, True, False, True, True, False, True),  # 2
-        (True, True, True, True, False, False, True),  # 3
-        (False, True, True, False, False, True, True),  # 4
-        (True, False, True, True, False, True, True),  # 5
-        (True, False, True, True, True, True, True),  # 6
-        (True, True, True, False, False, False, False),  # 7
-        (True, True, True, True, True, True, True),  # 8
-        (True, True, True, True, False, True, True),  # 9
-    ]
-
-    def __init__(self, segments):
-        self._segments = segments
-
-    def matches(self, segments):
-        """Checks if this segment occupancy matches a fixed mask
-
-        :param segments: Occupancy of fixed segment mask
-        :type segments: tuple
-        """
-        return self._segments == segments
-
-    def digit(self):
-        """Returns digit represented by this segment
-
-        :return: Digit represented by this segment
-        :rtype: int
-        :raise RuntimeError: If the current segment configuration does not represent a
-                             digit
-        """
-        for (i, mask) in enumerate(self.DIGITS):
-            if self.matches(mask):
-                return i
-
-        raise RuntimeError(
-            "Current segment configuration does not represent a digit", self._segments
-        )
+    seg_start = 3 + pos * 2
+    seg_bytes = data[seg_start : seg_start + 2]  # noqa: E203
+    return (
+        bool(seg_bytes[0] & 0b1000),  # A
+        bool(seg_bytes[1] & 0b1000),  # B
+        bool(seg_bytes[1] & 0b0010),  # C
+        bool(seg_bytes[1] & 0b0001),  # D
+        bool(seg_bytes[0] & 0b0010),  # E
+        bool(seg_bytes[0] & 0b0100),  # F
+        bool(seg_bytes[1] & 0b0100),  # G
+    )
 
 
 class BM257sLCD:
     """Representation of bm257s lcd display
     """
+
+    SEGMENT_VALUES = {
+        (True, True, True, True, True, True, False): 0,
+        (False, True, True, False, False, False, False): 1,
+        (True, True, False, True, True, False, True): 2,
+        (True, True, True, True, False, False, True): 3,
+        (False, True, True, False, False, True, True): 4,
+        (True, False, True, True, False, True, True): 5,
+        (True, False, True, True, True, True, True): 6,
+        (True, True, True, False, False, False, False): 7,
+        (True, True, True, True, True, True, True): 8,
+        (True, True, True, True, False, True, True): 9,
+        (True, False, False, True, True, True, False): "C",
+        (True, False, False, False, True, True, True): "F",
+    }
 
     def __init__(self):
         self._data = None
@@ -67,46 +55,50 @@ class BM257sLCD:
         """
         self._data = data
 
-    def segment(self, pos):
-        """Read one of the four segments from the LCD
+    def segment_data(self):
+        """Parses data shown in 7-segment displays
 
-        :param pos: Which segment to extract, numbered from left to right
-        :type pos: int
+        TODO: Don't ignore dots
 
-        :return: Segment occupancy information
-        :rtype: tuple
+        :return: List of recognized datums
+        :rtype: list
         """
-        seg_start = 3 + pos * 2
-        seg_bytes = self._data[seg_start : seg_start + 2]  # noqa: E203
-        return Segment(
-            (
-                bool(seg_bytes[0] & 0b1000),  # A
-                bool(seg_bytes[1] & 0b1000),  # B
-                bool(seg_bytes[1] & 0b0010),  # C
-                bool(seg_bytes[1] & 0b0001),  # D
-                bool(seg_bytes[0] & 0b0010),  # E
-                bool(seg_bytes[0] & 0b0100),  # F
-                bool(seg_bytes[1] & 0b0100),  # G
-            )
-        )
+        result = []
+        cur_part = None
 
-    def number(self, start_seg=0, end_seg=3):
-        """Parse the number shown in a range of segments
+        for i in range(0, 4):
+            segment_conf = segment_from_data(self._data, i)
 
-        :param start_seg: First segment showing number (inclusive)
-        :type start_seg: int
-        :param end_seg: Last segment showing number (inclusive)
-        :type end_seg: int
+            if segment_conf in self.SEGMENT_VALUES:
+                segment_data = self.SEGMENT_VALUES[segment_conf]
 
-        :return: Number shown in specified range of segments
-        :rtype: int
-        :raise RuntimeError: If the segment range does not represent a number
-        """
-        segments = [self.segment(i) for i in range(start_seg, end_seg + 1)]
-        digits = [seg.digit() for seg in segments]
+                if cur_part is None:
+                    cur_part = segment_data
+                elif isinstance(segment_data, int):
+                    if isinstance(cur_part, int):
+                        cur_part = 10 * cur_part + segment_data
+                    else:
+                        result = result + [cur_part]
+                        cur_part = segment_data
+                elif isinstance(segment_data, str):
+                    if isinstance(cur_part, str):
+                        cur_part = cur_part + segment_data
+                    else:
+                        result = result + [cur_part]
+                        cur_part = segment_data
+                else:
+                    raise RuntimeError(
+                        f"Cannot handle segment data for segment {i}",
+                        segment_data,
+                        segment_conf,
+                    )
 
-        result = 0
-        for i in digits:
-            result = result * 10 + i
+            else:
+                raise RuntimeError(
+                    f"Unable to parse segment {i}: Unknown configuration", segment_conf
+                )
+
+        if cur_part is not None:
+            result = result + [cur_part]
 
         return result

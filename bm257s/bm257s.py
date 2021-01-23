@@ -1,7 +1,7 @@
 """Serial interface library for brymen bm257s multimeters"""
 import serial
 
-from .lcd import BM257sLCD, Segment
+from .lcd import BM257sLCD
 from .measurement import Measurement, TemperatureMeasurement
 
 
@@ -15,24 +15,28 @@ def parse_lcd(lcd):
     :rtype: tuple
     """
 
-    segments = [lcd.segment(i) for i in range(0, 4)]
-    value = lcd.number(0, 2)
+    segment_data = lcd.segment_data()
 
-    if segments[3].matches(Segment.LETTER_C):
-        return (
-            Measurement.TEMPERATURE,
-            TemperatureMeasurement(
-                unit=TemperatureMeasurement.UNIT_CELSIUS, value=value
-            ),
-        )
-    if segments[3].matches(Segment.LETTER_F):
-        return (
-            Measurement.TEMPERATURE,
-            TemperatureMeasurement(
-                unit=TemperatureMeasurement.UNIT_FAHRENHEIT, value=value
-            ),
-        )
-    return None
+    if len(segment_data) == 2:
+        value = segment_data[0]
+        unit_string = segment_data[1]
+
+        if not isinstance(value, int) or not isinstance(unit_string, str):
+            return None
+
+        unit_mapping = {
+            "C": TemperatureMeasurement.UNIT_CELSIUS,
+            "F": TemperatureMeasurement.UNIT_FAHRENHEIT,
+        }
+        if unit_string in unit_mapping:
+            return (
+                Measurement.TEMPERATURE,
+                TemperatureMeasurement(unit=unit_mapping[unit_string], value=value),
+            )
+
+        raise RuntimeError("Unknown temperature unit", unit_string)
+
+    raise RuntimeError("Cannot parse segment data", segment_data)
 
 
 class BM257sSerialInterface:

@@ -12,13 +12,10 @@ def main():
         while 1:
             try:
                 measurement = mm.read()
+                print(f"{measurement[0]}: {measurement[1]}")
+
             except RuntimeError as ex:
                 print(f"Could not read current measurement: {ex}")
-
-            if measurement is not None:
-                print(f"{measurement[0]}: {measurement[1]}")
-            else:
-                print("Invalid measurement")
 
 
 if __name__ == "__main__":
