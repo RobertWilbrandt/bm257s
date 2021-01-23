@@ -42,6 +42,7 @@ class BM257sLCD:
         (True, True, True, True, False, True, True): 9,
         (True, False, False, True, True, True, False): "C",
         (True, False, False, False, True, True, True): "F",
+        (False, False, False, False, False, False, True): "-",
     }
 
     def __init__(self):

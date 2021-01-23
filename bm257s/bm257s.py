@@ -36,6 +36,23 @@ def parse_lcd(lcd):
 
         raise RuntimeError("Unknown temperature unit", unit_string)
 
+    if len(segment_data) == 1:
+        if segment_data[0] == "---C":
+            return (
+                Measurement.TEMPERATURE,
+                TemperatureMeasurement(
+                    unit=TemperatureMeasurement.UNIT_CELSIUS, value=None
+                ),
+            )
+
+        if segment_data[0] == "---F":
+            return (
+                Measurement.TEMPERATURE,
+                TemperatureMeasurement(
+                    unit=TemperatureMeasurement.UNIT_FAHRENHEIT, value=None
+                ),
+            )
+
     raise RuntimeError("Cannot parse segment data", segment_data)
 
 

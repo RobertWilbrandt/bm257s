@@ -8,7 +8,15 @@ class Measurement:
     TEMPERATURE = "TEMPERATURE"
 
 
-class TemperatureMeasurement:
+class TemperatureMeasurement(Measurement):
+    """Representation of temperature measurement
+
+    :param unit: Unit of measurement, either UNIT_CELSIUS or UNIT_FAHRENHEIT
+    :type unit: int
+    :param value: Measured temperature or None if no probe is connected
+    :type value: int
+    """
+
     UNIT_CELSIUS = 1
     UNIT_FAHRENHEIT = 2
 
@@ -16,10 +24,14 @@ class TemperatureMeasurement:
         self.unit = unit
         self.value = value
 
-    def __str__(self):
-        if self.unit == self.UNIT_CELSIUS:
-            return f"{self.value} °C"
-        if self.unit == self.UNIT_FAHRENHEIT:
-            return f"{self.value} F"
+        super().__init__()
 
-        return self
+    def __str__(self):
+        value_str = "--" if self.value is None else self.value
+
+        if self.unit == self.UNIT_CELSIUS:
+            unit_str = "°C"
+        elif self.unit == self.UNIT_FAHRENHEIT:
+            unit_str = "F"
+
+        return f"{value_str} {unit_str}"
