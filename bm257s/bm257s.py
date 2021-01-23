@@ -1,7 +1,7 @@
 """Serial interface library for brymen bm257s multimeters"""
 import serial
 
-from .lcd import BM257sLCD
+from .lcd import BM257sLCD, Segment
 from .measurement import Measurement, TemperatureMeasurement
 
 
@@ -14,17 +14,15 @@ def parse_lcd(lcd):
     :return: Name of measurement quantity and measurement
     :rtype: tuple
     """
-    segment_temp_celsius = (True, False, False, True, True, True, False)
-    segment_temp_fahrenheit = (True, False, False, False, True, True, True)
 
     segments = [lcd.segment(i) for i in range(0, 4)]
 
-    if segments[3] == segment_temp_celsius:
+    if segments[3].matches(Segment.LETTER_C):
         return (
             Measurement.TEMPERATURE,
             TemperatureMeasurement(unit=TemperatureMeasurement.UNIT_CELSIUS),
         )
-    if segments[3] == segment_temp_fahrenheit:
+    if segments[3].matches(Segment.LETTER_F):
         return (
             Measurement.TEMPERATURE,
             TemperatureMeasurement(unit=TemperatureMeasurement.UNIT_FAHRENHEIT),
