@@ -1,12 +1,14 @@
 """Serial interface library for brymen bm257s multimeters"""
 import serial
 
+from .lcd import BM257sLCD
 
-def parse_lcd(data):
-    """Parse measurement information from raw serial LCD data
 
-    :param data: Raw serial data from device, aligned to 15-byte package
-    :type data: bytes
+def parse_lcd(lcd):
+    """Parse measurement information from received lcd display state
+
+    :param lcd: Current lcd display state
+    :type lcd: BM257sLCD
 
     :return: Name of measurement quantity and measurement
     :rtype: tuple
@@ -14,7 +16,7 @@ def parse_lcd(data):
     segment_temp_celsius = (True, False, False, True, True, True, False)
     segment_temp_fahrenheit = (True, False, False, False, True, True, True)
 
-    segments = [lcd_segment(data, i) for i in range(0, 4)]
+    segments = [lcd.segment(i) for i in range(0, 4)]
 
     if segments[3] == segment_temp_celsius:
         return (
@@ -27,30 +29,6 @@ def parse_lcd(data):
             TemperatureMeasurement(unit=TemperatureMeasurement.UNIT_FAHRENHEIT),
         )
     return None
-
-
-def lcd_segment(data, pos):
-    """Read one of the four segments from the LCD
-
-    :param data: Raw serial data from device, aligned to 15-byte package
-    :type data: bytes
-    :param pos: Which segment to extract, left to right
-    :type pos: int
-
-    :return: Segment occupancy information
-    :rtype: tuple
-    """
-    seg_start = 3 + pos * 2
-    seg_bytes = data[seg_start : seg_start + 2]  # noqa: E203
-    return (
-        bool(seg_bytes[0] & 0b1000),  # A
-        bool(seg_bytes[1] & 0b1000),  # B
-        bool(seg_bytes[1] & 0b0010),  # C
-        bool(seg_bytes[1] & 0b0001),  # D
-        bool(seg_bytes[0] & 0b0010),  # E
-        bool(seg_bytes[0] & 0b0100),  # F
-        bool(seg_bytes[1] & 0b0100),  # G
-    )
 
 
 class Measurement:
@@ -84,6 +62,8 @@ class BM257sSerialInterface:
     """
 
     def __init__(self, port="/dev/ttyUSB0"):
+        self._lcd = BM257sLCD()
+
         self._serial = serial.Serial(
             port,
             baudrate=9600,
@@ -107,7 +87,8 @@ class BM257sSerialInterface:
             next_data = self._serial.read(left_to_read)
             data = data[15 - start_cnt :] + next_data  # noqa: E203
 
-        return parse_lcd(data)
+        self._lcd.set_data(data)
+        return parse_lcd(self._lcd)
 
     def close(self):
         """Closes the used serial port
