@@ -2,8 +2,27 @@
 
 
 class Segment:
+    """Representation of occupancy of a single LCD display segment
+
+    :param segments: Occupancy information of display segment
+    :type segments: tuple
+    """
+
     LETTER_C = (True, False, False, True, True, True, False)
     LETTER_F = (True, False, False, False, True, True, True)
+
+    DIGITS = [
+        (True, True, True, True, True, True, False),  # 0
+        (False, True, True, False, False, False, False),  # 1
+        (True, True, False, True, True, False, True),  # 2
+        (True, True, True, True, False, False, True),  # 3
+        (False, True, True, False, False, True, True),  # 4
+        (True, False, True, True, False, True, True),  # 5
+        (True, False, True, True, True, True, True),  # 6
+        (True, True, True, False, False, False, False),  # 7
+        (True, True, True, True, True, True, True),  # 8
+        (True, True, True, True, False, True, True),  # 9
+    ]
 
     def __init__(self, segments):
         self._segments = segments
@@ -15,6 +34,22 @@ class Segment:
         :type segments: tuple
         """
         return self._segments == segments
+
+    def digit(self):
+        """Returns digit represented by this segment
+
+        :return: Digit represented by this segment
+        :rtype: int
+        :raise RuntimeError: If the current segment configuration does not represent a
+                             digit
+        """
+        for (i, mask) in enumerate(self.DIGITS):
+            if self.matches(mask):
+                return i
+
+        raise RuntimeError(
+            "Current segment configuration does not represent a digit", self._segments
+        )
 
 
 class BM257sLCD:
@@ -54,3 +89,24 @@ class BM257sLCD:
                 bool(seg_bytes[1] & 0b0100),  # G
             )
         )
+
+    def number(self, start_seg=0, end_seg=3):
+        """Parse the number shown in a range of segments
+
+        :param start_seg: First segment showing number (inclusive)
+        :type start_seg: int
+        :param end_seg: Last segment showing number (inclusive)
+        :type end_seg: int
+
+        :return: Number shown in specified range of segments
+        :rtype: int
+        :raise RuntimeError: If the segment range does not represent a number
+        """
+        segments = [self.segment(i) for i in range(start_seg, end_seg + 1)]
+        digits = [seg.digit() for seg in segments]
+
+        result = 0
+        for i in digits:
+            result = result * 10 + i
+
+        return result

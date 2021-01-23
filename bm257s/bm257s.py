@@ -16,16 +16,21 @@ def parse_lcd(lcd):
     """
 
     segments = [lcd.segment(i) for i in range(0, 4)]
+    value = lcd.number(0, 2)
 
     if segments[3].matches(Segment.LETTER_C):
         return (
             Measurement.TEMPERATURE,
-            TemperatureMeasurement(unit=TemperatureMeasurement.UNIT_CELSIUS),
+            TemperatureMeasurement(
+                unit=TemperatureMeasurement.UNIT_CELSIUS, value=value
+            ),
         )
     if segments[3].matches(Segment.LETTER_F):
         return (
             Measurement.TEMPERATURE,
-            TemperatureMeasurement(unit=TemperatureMeasurement.UNIT_FAHRENHEIT),
+            TemperatureMeasurement(
+                unit=TemperatureMeasurement.UNIT_FAHRENHEIT, value=value
+            ),
         )
     return None
 

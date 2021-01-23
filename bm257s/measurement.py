@@ -12,13 +12,14 @@ class TemperatureMeasurement:
     UNIT_CELSIUS = 1
     UNIT_FAHRENHEIT = 2
 
-    def __init__(self, unit):
+    def __init__(self, unit, value):
         self.unit = unit
+        self.value = value
 
     def __str__(self):
         if self.unit == self.UNIT_CELSIUS:
-            return "?? °C"
+            return f"{self.value} °C"
         if self.unit == self.UNIT_FAHRENHEIT:
-            return "?? F"
+            return f"{self.value} F"
 
         return self
