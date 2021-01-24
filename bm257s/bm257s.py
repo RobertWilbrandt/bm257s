@@ -61,18 +61,22 @@ class BM257sSerialInterface:
 
     :param port: Device name to use
     :type port: str
+    :raise RuntimeError: If opening port is not possible
     """
 
     def __init__(self, port="/dev/ttyUSB0"):
         self._lcd = BM257sLCD()
 
-        self._serial = serial.Serial(
-            port,
-            baudrate=9600,
-            parity=serial.PARITY_NONE,
-            bytesize=serial.EIGHTBITS,
-            stopbits=serial.STOPBITS_ONE,
-        )
+        try:
+            self._serial = serial.Serial(
+                port,
+                baudrate=9600,
+                parity=serial.PARITY_NONE,
+                bytesize=serial.EIGHTBITS,
+                stopbits=serial.STOPBITS_ONE,
+            )
+        except serial.SerialException as ex:
+            raise RuntimeError(f"Could not open port {port}", ex)
 
     def read(self):
         """Reads measurement from multimeter

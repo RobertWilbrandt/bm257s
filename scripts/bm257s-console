@@ -8,11 +8,13 @@ import sys
 import bm257s
 
 
-def main(stdscr):
+def main(stdscr, interface):
     """Start minimal bm257s console
 
     :param stdscr: Curses window object
     :type stdscr: curses.window
+    :param interface: Multimeter interface
+    :type interface: bm257s.BM257sSerialInterface
     """
     stdscr.clear()
     curses.use_default_colors()
@@ -30,31 +32,35 @@ def main(stdscr):
     stdscr.addstr(4, 1, "Status:")
     win_status = curses.newwin(1, 30, 4, 10)
 
-    with bm257s.BM257sSerialInterface() as mm:
-        while 1:
-            try:
-                measurement = mm.read()
-                win_qty.addstr(0, 0, f"{measurement[0]:>19}")
-                win_meas.addstr(0, 0, f"{str(measurement[1]):>19}")
+    while 1:
+        try:
+            measurement = interface.read()
+            win_qty.addstr(0, 0, f"{measurement[0]:>19}")
+            win_meas.addstr(0, 0, f"{str(measurement[1]):>19}")
 
-                win_status.addstr(
-                    0, 0, f"{'OK':>29}", curses.color_pair(COLOR_PAIR_STATUS_OK)
-                )
+            win_status.addstr(
+                0, 0, f"{'OK':>29}", curses.color_pair(COLOR_PAIR_STATUS_OK)
+            )
 
-            except RuntimeError:
-                win_status.addstr(
-                    0, 0, f"{'ERROR':>29}", curses.color_pair(COLOR_PAIR_STATUS_ERR)
-                )
+        except RuntimeError:
+            win_status.addstr(
+                0, 0, f"{'ERROR':>29}", curses.color_pair(COLOR_PAIR_STATUS_ERR)
+            )
 
-            win_qty.refresh()
-            win_meas.refresh()
-            win_status.refresh()
-            stdscr.refresh()
+        win_qty.refresh()
+        win_meas.refresh()
+        win_status.refresh()
+        stdscr.refresh()
 
 
 if __name__ == "__main__":
     try:
-        curses.wrapper(main)
-    except KeyboardInterrupt:
-        curses.endwin()
-        sys.exit(0)
+        with bm257s.BM257sSerialInterface() as mm:
+            try:
+                curses.wrapper(main, mm)
+            except KeyboardInterrupt:
+                curses.endwin()
+
+    except RuntimeError as ex:
+        print(f"Could not open serial device: {ex}", file=sys.stderr)
+        sys.exit(1)
