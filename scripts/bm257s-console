@@ -3,6 +3,7 @@
 # pylint: disable=invalid-name
 
 import curses
+import datetime
 import sys
 
 import bm257s
@@ -32,8 +33,28 @@ def main(stdscr, interface):
     stdscr.addstr(4, 1, "Status:")
     win_status = curses.newwin(1, 30, 4, 10)
 
+    conn_last = datetime.datetime.min
+    win_conn = curses.newwin(1, 40, 6, 1)
+
     while 1:
         try:
+            # Update connection status
+            now = datetime.datetime.now()
+            if (now - conn_last).total_seconds() > 1.0:
+                conn_state_str = "Not Connected"
+            else:
+                conn_state_str = "Connected"
+            win_conn.addstr(0, 0, f"{conn_state_str:>39}", curses.A_REVERSE)
+            conn_last = now
+
+            # Update windows
+            stdscr.refresh()
+            win_qty.refresh()
+            win_meas.refresh()
+            win_status.refresh()
+            win_conn.refresh()
+
+            # Read from interface
             measurement = interface.read()
             win_qty.addstr(0, 0, f"{measurement[0]:>19}")
             win_meas.addstr(0, 0, f"{str(measurement[1]):>19}")
@@ -46,11 +67,6 @@ def main(stdscr, interface):
             win_status.addstr(
                 0, 0, f"{'ERROR':>29}", curses.color_pair(COLOR_PAIR_STATUS_ERR)
             )
-
-        win_qty.refresh()
-        win_meas.refresh()
-        win_status.refresh()
-        stdscr.refresh()
 
 
 if __name__ == "__main__":
