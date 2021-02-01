@@ -18,9 +18,11 @@ def parse_lcd(lcd):
     """
 
     segments = lcd.segment_data()
-    symbols = lcd.symbols()
+    symbols = set(lcd.symbols())
 
-    if symbols == []:
+    res_symbols = {BM257sLCD.SYMBOL_OHM, BM257sLCD.SYMBOL_k, BM257sLCD.SYMBOL_M}
+
+    if symbols == set():
         temp_unit_mapping = {
             "C": TemperatureMeasurement.UNIT_CELSIUS,
             "F": TemperatureMeasurement.UNIT_FAHRENHEIT,
@@ -40,10 +42,21 @@ def parse_lcd(lcd):
                 ),
             )
 
-    elif symbols == [BM257sLCD.SYMBOL_OHM]:
+    elif BM257sLCD.SYMBOL_OHM in symbols and symbols.issubset(res_symbols):
         value = segments.float_value()
+
+        if BM257sLCD.SYMBOL_k in symbols:
+            prefix = Measurement.PREFIX_KILO
+        elif BM257sLCD.SYMBOL_M in symbols:
+            prefix = Measurement.PREFIX_MEGA
+        else:
+            prefix = Measurement.PREFIX_NONE
+
         if value is not None:
-            return (Measurement.RESISTANCE, ResistanceMeasurement(value=value))
+            return (
+                Measurement.RESISTANCE,
+                ResistanceMeasurement(value=value, prefix=prefix),
+            )
 
     raise RuntimeError("Cannot parse LCD configuration")
 

@@ -51,6 +51,10 @@ def symbols_from_data(data):
     result = []
     if bool(data[12] & 0b00000100):
         result = result + [BM257sLCD.SYMBOL_OHM]
+    if bool(data[11] & 0b00000001):
+        result = result + [BM257sLCD.SYMBOL_k]
+    if bool(data[11] & 0b00000010):
+        result = result + [BM257sLCD.SYMBOL_M]
 
     return result
 
@@ -154,9 +158,12 @@ class BM257sLCD:
         (True, False, False, True, True, True, False): "C",
         (True, False, False, False, True, True, True): "F",
         (False, False, False, False, False, False, True): "-",
+        (False, False, False, False, False, False, False): " ",
     }
 
     SYMBOL_OHM = 1
+    SYMBOL_k = 2
+    SYMBOL_M = 3
 
     def __init__(self):
         self._data = None

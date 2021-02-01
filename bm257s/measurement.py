@@ -8,6 +8,10 @@ class Measurement:
     TEMPERATURE = "TEMPERATURE"
     RESISTANCE = "RESISTANCE"
 
+    PREFIX_NONE = ""
+    PREFIX_KILO = "k"
+    PREFIX_MEGA = "M"
+
 
 class TemperatureMeasurement(Measurement):
     """Representation of temperature measurement
@@ -43,15 +47,18 @@ class ResistanceMeasurement(Measurement):
 
     :param value: Measured resistance or None if open loop
     :type value: float
+    :param prefix: Metrix prefix of measurement
+    :type prefix: int
     """
 
-    def __init__(self, value):
+    def __init__(self, value, prefix=Measurement.PREFIX_NONE):
         self.value = value
+        self.prefix = prefix
 
         super().__init__()
 
     def __str__(self):
         if self.value is not None:
-            return f"{self.value}Ω"
+            return f"{self.value}{self.prefix}Ω"
 
         return "0.L"
