@@ -43,6 +43,9 @@ def parse_lcd(lcd):
             )
 
     elif BM257sLCD.SYMBOL_OHM in symbols and symbols.issubset(res_symbols):
+        if segments.string_value() == " 0.L ":
+            return (Measurement.RESISTANCE, ResistanceMeasurement(value=None))
+
         value = segments.float_value()
 
         if BM257sLCD.SYMBOL_k in symbols:

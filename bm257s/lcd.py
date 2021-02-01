@@ -159,6 +159,7 @@ class BM257sLCD:
         (True, False, False, False, True, True, True): "F",
         (False, False, False, False, False, False, True): "-",
         (False, False, False, False, False, False, False): " ",
+        (False, False, False, True, True, True, False): "L",
     }
 
     SYMBOL_OHM = 1
