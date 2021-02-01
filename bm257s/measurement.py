@@ -6,6 +6,7 @@ class Measurement:
         pass
 
     TEMPERATURE = "TEMPERATURE"
+    RESISTANCE = "RESISTANCE"
 
 
 class TemperatureMeasurement(Measurement):
@@ -35,3 +36,22 @@ class TemperatureMeasurement(Measurement):
             unit_str = "F"
 
         return f"{value_str} {unit_str}"
+
+
+class ResistanceMeasurement(Measurement):
+    """Representation of resistance measurement
+
+    :param value: Measured resistance or None if open loop
+    :type value: float
+    """
+
+    def __init__(self, value):
+        self.value = value
+
+        super().__init__()
+
+    def __str__(self):
+        if self.value is not None:
+            return f"{self.value}Ω"
+
+        return "0.L"

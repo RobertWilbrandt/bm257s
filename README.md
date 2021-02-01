@@ -23,3 +23,4 @@ The library currently does currently not support too many measuring modes. For s
 |------------------|:-------------:|---------|
 | Temperature (°C) | X             |         |
 | Temperature (F)  | X             |         |
+| Resistance (Ω)   | X             |         |

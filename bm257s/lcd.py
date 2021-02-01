@@ -39,6 +39,22 @@ def dot_from_data(data, pos):
     return data[5 + pos * 2] & 0b1
 
 
+def symbols_from_data(data):
+    """Parse symbols from a data bytestring
+
+    :param data: Received multimeter data, aligned to 15-byte package
+    :type data: bytes
+
+    :return: List of detected symbols
+    :rtype: list
+    """
+    result = []
+    if bool(data[12] & 0b00000100):
+        result = result + [BM257sLCD.SYMBOL_OHM]
+
+    return result
+
+
 class SegmentString:
     """Representation of the segment display portion of a bm257s lcd display
 
@@ -72,7 +88,7 @@ class SegmentString:
 
         return None
 
-    def string_value(self, start_i=0, end_i=3):
+    def string_value(self, start_i=0, end_i=3, ignore_dots=False):
         """Read string value from segments
 
         Includes dots if present.
@@ -81,18 +97,43 @@ class SegmentString:
         :type start_i: int
         :param end_i: Last segment to consider
         :type end_i: int
+        :param ignore_dots: Whether to ignore dots in string
+        :type ignore_dots: bool
 
-        :return String shown by segments
+        :return: String shown by segments
         :rtype: str
         """
         result = ""
-        for i in range(start_i, end_i + 1):
+        for i in range(start_i, end_i):
             result = result + self.chars[i]
 
-            if self.dots[i]:
+            if self.dots[i] and not ignore_dots:
                 result = result + "."
 
+        result = result + self.chars[end_i]
+
         return result
+
+    def float_value(self, start_i=0, end_i=3):
+        """Read float value from segments
+
+        :param start_i: First segment to consider
+        :type start_i: int
+        :param end_i: Last segment to consider
+        :type end_i: int
+
+        :return: Float shown by segments or None
+        :rtype: float
+        """
+        val_str = self.string_value(start_i, end_i)
+        val_str_raw = self.string_value(start_i, end_i, ignore_dots=True)
+        if val_str_raw.isdigit():
+            try:
+                return float(val_str)
+            except ValueError:
+                pass
+
+        return None
 
 
 class BM257sLCD:
@@ -114,6 +155,8 @@ class BM257sLCD:
         (True, False, False, False, True, True, True): "F",
         (False, False, False, False, False, False, True): "-",
     }
+
+    SYMBOL_OHM = 1
 
     def __init__(self):
         self._data = None
@@ -146,3 +189,11 @@ class BM257sLCD:
         dots = [dot_from_data(self._data, i) for i in range(0, 3)]
 
         return SegmentString(characters, dots)
+
+    def symbols(self):
+        """Parses symbols shown
+
+        :return: List of shown symbols
+        :rtype: list
+        """
+        return symbols_from_data(self._data)

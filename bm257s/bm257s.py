@@ -2,7 +2,8 @@
 import serial
 
 from .lcd import BM257sLCD
-from .measurement import Measurement, TemperatureMeasurement
+from .measurement import (Measurement, ResistanceMeasurement,
+                          TemperatureMeasurement)
 
 
 def parse_lcd(lcd):
@@ -17,25 +18,32 @@ def parse_lcd(lcd):
     """
 
     segments = lcd.segment_data()
+    symbols = lcd.symbols()
 
-    temp_unit_mapping = {
-        "C": TemperatureMeasurement.UNIT_CELSIUS,
-        "F": TemperatureMeasurement.UNIT_FAHRENHEIT,
-    }
-    if segments.chars[3] in temp_unit_mapping:
-        if segments.string_value(0, 2) == "---":
-            value = None
-        else:
-            value = segments.int_value(0, 2)
-            if value is None:
-                raise RuntimeError("Cannot parse temperature value")
+    if symbols == []:
+        temp_unit_mapping = {
+            "C": TemperatureMeasurement.UNIT_CELSIUS,
+            "F": TemperatureMeasurement.UNIT_FAHRENHEIT,
+        }
+        if segments.chars[3] in temp_unit_mapping:
+            if segments.string_value(0, 2) == "---":
+                value = None
+            else:
+                value = segments.int_value(0, 2)
+                if value is None:
+                    raise RuntimeError("Cannot parse temperature value")
 
-        return (
-            Measurement.TEMPERATURE,
-            TemperatureMeasurement(
-                unit=temp_unit_mapping[segments.chars[3]], value=value
-            ),
-        )
+            return (
+                Measurement.TEMPERATURE,
+                TemperatureMeasurement(
+                    unit=temp_unit_mapping[segments.chars[3]], value=value
+                ),
+            )
+
+    elif symbols == [BM257sLCD.SYMBOL_OHM]:
+        value = segments.float_value()
+        if value is not None:
+            return (Measurement.RESISTANCE, ResistanceMeasurement(value=value))
 
     raise RuntimeError("Cannot parse LCD configuration")
 
