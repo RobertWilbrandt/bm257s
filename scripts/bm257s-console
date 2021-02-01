@@ -56,12 +56,13 @@ def main(stdscr, interface):
 
             # Read from interface
             measurement = interface.read()
-            win_qty.addstr(0, 0, f"{measurement[0]:>19}")
-            win_meas.addstr(0, 0, f"{str(measurement[1]):>19}")
+            if measurement is not None:
+                win_qty.addstr(0, 0, f"{measurement[0]:>19}")
+                win_meas.addstr(0, 0, f"{str(measurement[1]):>19}")
 
-            win_status.addstr(
-                0, 0, f"{'OK':>29}", curses.color_pair(COLOR_PAIR_STATUS_OK)
-            )
+                win_status.addstr(
+                    0, 0, f"{'OK':>29}", curses.color_pair(COLOR_PAIR_STATUS_OK)
+                )
 
         except RuntimeError:
             win_status.addstr(
@@ -71,7 +72,7 @@ def main(stdscr, interface):
 
 if __name__ == "__main__":
     try:
-        with bm257s.BM257sSerialInterface() as mm:
+        with bm257s.BM257sSerialInterface(read_timeout=1.0) as mm:
             try:
                 curses.wrapper(main, mm)
             except KeyboardInterrupt:

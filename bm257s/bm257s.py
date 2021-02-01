@@ -61,10 +61,12 @@ class BM257sSerialInterface:
 
     :param port: Device name to use
     :type port: str
+    :param read_timeout: Maximum timeout for waiting while reading
+    :type read_timeout: float
     :raise RuntimeError: If opening port is not possible
     """
 
-    def __init__(self, port="/dev/ttyUSB0"):
+    def __init__(self, port="/dev/ttyUSB0", read_timeout=0.0):
         self._lcd = BM257sLCD()
 
         try:
@@ -74,6 +76,7 @@ class BM257sSerialInterface:
                 parity=serial.PARITY_NONE,
                 bytesize=serial.EIGHTBITS,
                 stopbits=serial.STOPBITS_ONE,
+                timeout=read_timeout,
             )
         except serial.SerialException as ex:
             raise RuntimeError(f"Could not open port {port}", ex)
@@ -81,10 +84,13 @@ class BM257sSerialInterface:
     def read(self):
         """Reads measurement from multimeter
 
-        :return: Tuple indicating measured quantity and corresponding measurement
+        :return: Tuple indicating measured quantity and corresponding measurement or
+                 None in case of timeout
         :rtype: tuple
         """
         data = self._serial.read(15)
+        if len(data) < 15:
+            return None
 
         # Use counter in data to check if we got one whole package or need to "align"
         start_cnt = int((data[0] & 0b11110000) >> 4)
