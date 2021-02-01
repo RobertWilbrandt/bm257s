@@ -13,47 +13,31 @@ def parse_lcd(lcd):
 
     :return: Name of measurement quantity and measurement
     :rtype: tuple
+    :raise RuntimeError: If lcd state seems invalid
     """
 
-    segment_data = lcd.segment_data()
+    segments = lcd.segment_data()
 
-    if len(segment_data) == 2:
-        value = segment_data[0]
-        unit_string = segment_data[1]
+    temp_unit_mapping = {
+        "C": TemperatureMeasurement.UNIT_CELSIUS,
+        "F": TemperatureMeasurement.UNIT_FAHRENHEIT,
+    }
+    if segments.chars[3] in temp_unit_mapping:
+        if segments.string_value(0, 2) == "---":
+            value = None
+        else:
+            value = segments.int_value(0, 2)
+            if value is None:
+                raise RuntimeError("Cannot parse temperature value")
 
-        if not isinstance(value, int) or not isinstance(unit_string, str):
-            return None
+        return (
+            Measurement.TEMPERATURE,
+            TemperatureMeasurement(
+                unit=temp_unit_mapping[segments.chars[3]], value=value
+            ),
+        )
 
-        unit_mapping = {
-            "C": TemperatureMeasurement.UNIT_CELSIUS,
-            "F": TemperatureMeasurement.UNIT_FAHRENHEIT,
-        }
-        if unit_string in unit_mapping:
-            return (
-                Measurement.TEMPERATURE,
-                TemperatureMeasurement(unit=unit_mapping[unit_string], value=value),
-            )
-
-        raise RuntimeError("Unknown temperature unit", unit_string)
-
-    if len(segment_data) == 1:
-        if segment_data[0] == "---C":
-            return (
-                Measurement.TEMPERATURE,
-                TemperatureMeasurement(
-                    unit=TemperatureMeasurement.UNIT_CELSIUS, value=None
-                ),
-            )
-
-        if segment_data[0] == "---F":
-            return (
-                Measurement.TEMPERATURE,
-                TemperatureMeasurement(
-                    unit=TemperatureMeasurement.UNIT_FAHRENHEIT, value=None
-                ),
-            )
-
-    raise RuntimeError("Cannot parse segment data", segment_data)
+    raise RuntimeError("Cannot parse LCD configuration")
 
 
 class BM257sSerialInterface:

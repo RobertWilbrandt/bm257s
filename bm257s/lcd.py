@@ -25,21 +25,91 @@ def segment_from_data(data, pos):
     )
 
 
+def dot_from_data(data, pos):
+    """Read a dot occupancy from a data bytestring
+
+    :param data: Received multimeter data, aligned to 15-byte package
+    :type data: bytes
+    :param pos: Position of dot to read
+    :type pos: int
+
+    :return: Dot occupancy
+    :rtype: bool
+    """
+    return data[5 + pos * 2] & 0b1
+
+
+class SegmentString:
+    """Representation of the segment display portion of a bm257s lcd display
+
+    :param chars: List of segment characters
+    :type chars: list
+    :param dots: List of segment dot occupancies
+    :type dots: list
+    """
+
+    def __init__(self, chars, dots):
+        self.chars = chars
+        self.dots = dots
+
+    def int_value(self, start_i=0, end_i=3):
+        """Try to parse integer value from segments
+
+        :param start_i: First segment to consider
+        :type start_i: int
+        :param end_i: Last segment to consider
+        :type end_i: int
+
+        :return: Number shown by segments or None
+        :rtype: int
+        """
+        try:
+            if all(not dot for dot in self.dots[start_i:end_i]):
+                value_str = "".join(self.chars[start_i : end_i + 1])  # noqa: E203
+                return int(value_str)
+        except ValueError:
+            pass
+
+        return None
+
+    def string_value(self, start_i=0, end_i=3):
+        """Read string value from segments
+
+        Includes dots if present.
+
+        :param start_i: First segment to consider
+        :type start_i: int
+        :param end_i: Last segment to consider
+        :type end_i: int
+
+        :return String shown by segments
+        :rtype: str
+        """
+        result = ""
+        for i in range(start_i, end_i + 1):
+            result = result + self.chars[i]
+
+            if self.dots[i]:
+                result = result + "."
+
+        return result
+
+
 class BM257sLCD:
     """Representation of bm257s lcd display
     """
 
     SEGMENT_VALUES = {
-        (True, True, True, True, True, True, False): 0,
-        (False, True, True, False, False, False, False): 1,
-        (True, True, False, True, True, False, True): 2,
-        (True, True, True, True, False, False, True): 3,
-        (False, True, True, False, False, True, True): 4,
-        (True, False, True, True, False, True, True): 5,
-        (True, False, True, True, True, True, True): 6,
-        (True, True, True, False, False, False, False): 7,
-        (True, True, True, True, True, True, True): 8,
-        (True, True, True, True, False, True, True): 9,
+        (True, True, True, True, True, True, False): "0",
+        (False, True, True, False, False, False, False): "1",
+        (True, True, False, True, True, False, True): "2",
+        (True, True, True, True, False, False, True): "3",
+        (False, True, True, False, False, True, True): "4",
+        (True, False, True, True, False, True, True): "5",
+        (True, False, True, True, True, True, True): "6",
+        (True, True, True, False, False, False, False): "7",
+        (True, True, True, True, True, True, True): "8",
+        (True, True, True, True, False, True, True): "9",
         (True, False, False, True, True, True, False): "C",
         (True, False, False, False, True, True, True): "F",
         (False, False, False, False, False, False, True): "-",
@@ -57,49 +127,22 @@ class BM257sLCD:
         self._data = data
 
     def segment_data(self):
-        """Parses data shown in 7-segment displays
+        """Parses data shown in 7-segment display
 
-        TODO: Don't ignore dots
-
-        :return: List of recognized datums
-        :rtype: list
+        :return: Content of 7-segment display
+        :rtype: SegmentString
+        :raise RuntimeError: If a segment shows an unknown configuration
         """
-        result = []
-        cur_part = None
-
+        characters = []
         for i in range(0, 4):
             segment_conf = segment_from_data(self._data, i)
-
             if segment_conf in self.SEGMENT_VALUES:
-                segment_data = self.SEGMENT_VALUES[segment_conf]
-
-                if cur_part is None:
-                    cur_part = segment_data
-                elif isinstance(segment_data, int):
-                    if isinstance(cur_part, int):
-                        cur_part = 10 * cur_part + segment_data
-                    else:
-                        result = result + [cur_part]
-                        cur_part = segment_data
-                elif isinstance(segment_data, str):
-                    if isinstance(cur_part, str):
-                        cur_part = cur_part + segment_data
-                    else:
-                        result = result + [cur_part]
-                        cur_part = segment_data
-                else:
-                    raise RuntimeError(
-                        f"Cannot handle segment data for segment {i}",
-                        segment_data,
-                        segment_conf,
-                    )
-
+                characters = characters + [self.SEGMENT_VALUES[segment_conf]]
             else:
                 raise RuntimeError(
-                    f"Unable to parse segment {i}: Unknown configuration", segment_conf
+                    f"Unknown segment configuration at segment {i}", segment_conf
                 )
 
-        if cur_part is not None:
-            result = result + [cur_part]
+        dots = [dot_from_data(self._data, i) for i in range(0, 3)]
 
-        return result
+        return SegmentString(characters, dots)
