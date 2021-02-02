@@ -39,6 +39,18 @@ def dot_from_data(data, pos):
     return data[5 + pos * 2] & 0b1
 
 
+def minus_from_data(data):
+    """Read the minus sign from a data bytestring
+
+    :param data: Received multimeter data, aligned to 15-byte package
+    :type data: bytes
+
+    :return: Minus occupancy
+    :rtype: bool
+    """
+    return data[3] & 0b1
+
+
 def symbols_from_data(data):
     """Parse symbols from a data bytestring
 
@@ -62,15 +74,50 @@ def symbols_from_data(data):
 class SegmentString:
     """Representation of the segment display portion of a bm257s lcd display
 
+    :param minus: Whether minus segment is shown
+    :type minus: bool
     :param chars: List of segment characters
     :type chars: list
     :param dots: List of segment dot occupancies
     :type dots: list
     """
 
-    def __init__(self, chars, dots):
+    def __init__(self, minus, chars, dots):
+        self.minus = minus
         self.chars = chars
         self.dots = dots
+
+    def string_value(self, start_i=0, end_i=3, ignore_dots=False, ignore_minus=False):
+        """Read string value from segments
+
+        Includes dots if present.
+
+        :param start_i: First segment to consider
+        :type start_i: int
+        :param end_i: Last segment to consider
+        :type end_i: int
+        :param ignore_dots: Whether to ignore dots in string
+        :type ignore_dots: bool
+        :param ignore_minus: Whether to ignore the minus sign
+        :type ignore_minus: bool
+
+        :return: String shown by segments
+        :rtype: str
+        """
+        if not ignore_minus and self.minus:
+            result = "-"
+        else:
+            result = ""
+
+        for i in range(start_i, end_i):
+            result = result + self.chars[i]
+
+            if self.dots[i] and not ignore_dots:
+                result = result + "."
+
+        result = result + self.chars[end_i]
+
+        return result
 
     def int_value(self, start_i=0, end_i=3):
         """Try to parse integer value from segments
@@ -83,40 +130,16 @@ class SegmentString:
         :return: Number shown by segments or None
         :rtype: int
         """
+        sign = -1 if self.minus else 1
+
         try:
             if all(not dot for dot in self.dots[start_i:end_i]):
                 value_str = "".join(self.chars[start_i : end_i + 1])  # noqa: E203
-                return int(value_str)
+                return sign * int(value_str)
         except ValueError:
             pass
 
         return None
-
-    def string_value(self, start_i=0, end_i=3, ignore_dots=False):
-        """Read string value from segments
-
-        Includes dots if present.
-
-        :param start_i: First segment to consider
-        :type start_i: int
-        :param end_i: Last segment to consider
-        :type end_i: int
-        :param ignore_dots: Whether to ignore dots in string
-        :type ignore_dots: bool
-
-        :return: String shown by segments
-        :rtype: str
-        """
-        result = ""
-        for i in range(start_i, end_i):
-            result = result + self.chars[i]
-
-            if self.dots[i] and not ignore_dots:
-                result = result + "."
-
-        result = result + self.chars[end_i]
-
-        return result
 
     def float_value(self, start_i=0, end_i=3):
         """Read float value from segments
@@ -129,11 +152,15 @@ class SegmentString:
         :return: Float shown by segments or None
         :rtype: float
         """
+        sign = -1 if self.minus else 1
+
         val_str = self.string_value(start_i, end_i)
-        val_str_raw = self.string_value(start_i, end_i, ignore_dots=True)
+        val_str_raw = self.string_value(
+            start_i, end_i, ignore_dots=True, ignore_minus=True
+        )
         if val_str_raw.isdigit():
             try:
-                return float(val_str)
+                return sign * float(val_str)
             except ValueError:
                 pass
 
@@ -184,6 +211,8 @@ class BM257sLCD:
         :rtype: SegmentString
         :raise RuntimeError: If a segment shows an unknown configuration
         """
+        minus = minus_from_data(self._data)
+
         characters = []
         for i in range(0, 4):
             segment_conf = segment_from_data(self._data, i)
@@ -196,7 +225,7 @@ class BM257sLCD:
 
         dots = [dot_from_data(self._data, i) for i in range(0, 3)]
 
-        return SegmentString(characters, dots)
+        return SegmentString(minus, characters, dots)
 
     def symbols(self):
         """Parses symbols shown
