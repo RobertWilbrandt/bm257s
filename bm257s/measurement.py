@@ -7,6 +7,7 @@ class Measurement:
 
     TEMPERATURE = "TEMPERATURE"
     RESISTANCE = "RESISTANCE"
+    VOLTAGE = "VOLTAGE"
 
     PREFIX_NONE = ""
     PREFIX_KILO = "k"
@@ -62,3 +63,26 @@ class ResistanceMeasurement(Measurement):
             return f"{self.value}{self.prefix}Ω"
 
         return "0.L"
+
+
+class VoltageMeasurement(Measurement):
+    """Representation of voltage measurement
+
+    :param value: Measured voltage
+    :type value: float
+    :param current: Type of current measured
+    :type current: int
+    """
+
+    CURRENT_AC = 1
+    CURRENT_DC = 2
+
+    def __init__(self, value, current):
+        self.value = value
+        self.current = current
+
+        super().__init__()
+
+    def __str__(self):
+        current_postfix = {self.CURRENT_AC: " [~]", self.CURRENT_DC: ""}
+        return f"{self.value}V{current_postfix[self.current]}"

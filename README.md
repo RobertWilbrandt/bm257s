@@ -24,3 +24,7 @@ The library currently does currently not support too many measuring modes. For s
 | Temperature (°C) | X             |         |
 | Temperature (F)  | X             |         |
 | Resistance (Ω)   | X             |         |
+| Resistance (kΩ)  | X             |         |
+| Resistance (MΩ)  | X             |         |
+| Voltage DC (V)   | X             |         |
+| Voltage AC (V)   | X             |         |

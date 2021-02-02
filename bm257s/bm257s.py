@@ -3,7 +3,7 @@ import serial
 
 from .lcd import BM257sLCD
 from .measurement import (Measurement, ResistanceMeasurement,
-                          TemperatureMeasurement)
+                          TemperatureMeasurement, VoltageMeasurement)
 
 
 def parse_lcd(lcd):
@@ -21,6 +21,7 @@ def parse_lcd(lcd):
     symbols = set(lcd.symbols())
 
     res_symbols = {BM257sLCD.SYMBOL_OHM, BM257sLCD.SYMBOL_k, BM257sLCD.SYMBOL_M}
+    vol_symbols = {BM257sLCD.SYMBOL_V, BM257sLCD.SYMBOL_AC, BM257sLCD.SYMBOL_DC}
 
     if symbols == set():
         temp_unit_mapping = {
@@ -60,6 +61,16 @@ def parse_lcd(lcd):
                 Measurement.RESISTANCE,
                 ResistanceMeasurement(value=value, prefix=prefix),
             )
+
+    elif BM257sLCD.SYMBOL_V in symbols and symbols.issubset(vol_symbols):
+        value = segments.float_value()
+
+        if BM257sLCD.SYMBOL_AC in symbols:
+            current = VoltageMeasurement.CURRENT_AC
+        elif BM257sLCD.SYMBOL_DC in symbols:
+            current = VoltageMeasurement.CURRENT_DC
+
+        return (Measurement.VOLTAGE, VoltageMeasurement(value=value, current=current))
 
     raise RuntimeError("Cannot parse LCD configuration")
 

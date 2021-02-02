@@ -67,6 +67,12 @@ def symbols_from_data(data):
         result = result + [BM257sLCD.SYMBOL_k]
     if bool(data[11] & 0b00000010):
         result = result + [BM257sLCD.SYMBOL_M]
+    if bool(data[14] & 0b00000100):
+        result = result + [BM257sLCD.SYMBOL_V]
+    if bool(data[1] & 0b00000010):
+        result = result + [BM257sLCD.SYMBOL_AC]
+    if bool(data[1] & 0b00000100):
+        result = result + [BM257sLCD.SYMBOL_DC]
 
     return result
 
@@ -104,7 +110,7 @@ class SegmentString:
         :return: String shown by segments
         :rtype: str
         """
-        if not ignore_minus and self.minus:
+        if self.minus and not ignore_minus:
             result = "-"
         else:
             result = ""
@@ -152,15 +158,13 @@ class SegmentString:
         :return: Float shown by segments or None
         :rtype: float
         """
-        sign = -1 if self.minus else 1
-
         val_str = self.string_value(start_i, end_i)
         val_str_raw = self.string_value(
             start_i, end_i, ignore_dots=True, ignore_minus=True
         )
         if val_str_raw.isdigit():
             try:
-                return sign * float(val_str)
+                return float(val_str)
             except ValueError:
                 pass
 
@@ -192,6 +196,9 @@ class BM257sLCD:
     SYMBOL_OHM = 1
     SYMBOL_k = 2
     SYMBOL_M = 3
+    SYMBOL_V = 4
+    SYMBOL_AC = 5
+    SYMBOL_DC = 6
 
     def __init__(self):
         self._data = None
