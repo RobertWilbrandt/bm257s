@@ -1,3 +1,5 @@
+![CI](https://github.com/RobertWilbrandt/bm257s/workflows/CI/badge.svg?branch=main)
+
 Brymen BM257s Serial Library
 ============================
 
