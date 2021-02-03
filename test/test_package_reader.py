@@ -11,8 +11,3 @@ class TestPackageReader(unittest.TestCase):
         """Test of successfull test
         """
         self.assertEqual("foo".upper(), "FOO")
-
-    def test_failure(self):
-        """Test of failing test
-        """
-        self.assertEqual("foo".upper(), "bar")
