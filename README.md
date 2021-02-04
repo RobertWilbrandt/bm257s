@@ -30,3 +30,25 @@ The library currently does currently not support too many measuring modes. For s
 | Resistance (MΩ)  | X             |         |
 | Voltage DC (V)   | X             |         |
 | Voltage AC (V)   | X             |         |
+
+Code Style
+----------
+
+This project uses various linters to enforce its code style:
+- The [black](https://black.readthedocs.io/en/stable/) code formatter
+- [isort](https://pycqa.github.io/isort/) for nicely sorted imports
+- The [flake8](https://flake8.pycqa.org/en/latest/) linter
+- The [pylint](https://www.pylint.org/) linter
+
+They are integrated into automatic testing and run automatically in ci.
+
+Testing
+-------
+
+This project uses [tox](https://tox.readthedocs.io/en/latest/) for testing automation. It runs the included [unittest](https://docs.python.org/3/library/unittest.html) tests and checks the linters discussed in [Code Style](#code-style).
+
+If you want to run the tests locally you first need to install ```tox``` using ```pip3 install --user tox```. Then you should be able to start testing:
+
+```console
+$ tox
+```
