@@ -117,6 +117,29 @@ class Package:
 
         return result
 
+    def segment_float(self, start_i=0, end_i=3, use_minus=True):
+        """Read segment float value from segment display
+
+        :param start_i: First digit to consider
+        :type start_i: int
+        :param end_i: Last digit to consider
+        :type end_i: int
+        :param use_minus: Whether to include minus in evaluation
+        :type use_minus: bool
+
+        :return: Float number formed by segment display
+        :rtype: float
+        :raise RuntimeError: If the segment display doesn't show a float number
+        """
+        raw_str = self.segment_string(start_i, end_i, use_minus)
+
+        try:
+            return float(raw_str)
+        except ValueError as ex:
+            raise RuntimeError(
+                "Cannot read float value from segment display", ex
+            ) from ex
+
 
 def parse_segment(data, pos):
     """Parses a single 7-segment digit from raw multimeter data

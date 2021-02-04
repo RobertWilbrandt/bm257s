@@ -36,6 +36,11 @@ class TestPackageParsing(unittest.TestCase):
             "513.6",
             "Read correct segment string from example package",
         )
+        self.assertAlmostEqual(
+            pkg.segment_float(),
+            513.6,
+            msg="Read correct float number from example package",
+        )
 
     def test_index_checking(self):
         self.assertRaises(
