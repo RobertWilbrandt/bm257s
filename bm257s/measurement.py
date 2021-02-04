@@ -1,7 +1,12 @@
 """Representation of measurements taken by bm257s multimeter"""
+# pylint: disable=R0903
+# Remove this once usage becomes clearer
 
 
 class Measurement:
+    """Generic measurement representation
+    """
+
     def __init__(self):
         pass
 

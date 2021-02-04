@@ -16,6 +16,8 @@ def parse_lcd(lcd):
     :rtype: tuple
     :raise RuntimeError: If lcd state seems invalid
     """
+    # pylint: disable=R0912
+    # This method will get replaced soon
 
     segments = lcd.segment_data()
     symbols = set(lcd.symbols())
@@ -98,7 +100,7 @@ class BM257sSerialInterface:
                 timeout=read_timeout,
             )
         except serial.SerialException as ex:
-            raise RuntimeError(f"Could not open port {port}", ex)
+            raise RuntimeError(f"Could not open port {port}", ex) from ex
 
     def read(self):
         """Reads measurement from multimeter

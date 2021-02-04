@@ -1,5 +1,4 @@
 """Read, organize and validate packages from data input"""
-
 import enum
 import threading
 
@@ -46,6 +45,9 @@ class Package:
     :param symbols: Set of symbols currently shown
     :type symbol: set
     """
+
+    # pylint: disable=R0903
+    # Remove this once usage becomes clearer
 
     def __init__(self, segments, dots, symbols):
         self.segments = segments
