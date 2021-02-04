@@ -63,11 +63,11 @@ def parse_package(data):
 
     # Check byte indices
     index_mask = ((1 << 5) - 1) << 4
-    for (i, d_i) in enumerate(data[1:]):
+    for (i, d_i) in enumerate(data):
         index_field = (d_i & index_mask) >> 4
-        if index_field != (i + 1):
+        if index_field != i:
             raise RuntimeError(
-                f"Raw data package contains invalid byte index at byte {i + 1}",
+                f"Raw data package contains invalid byte index at byte {i}",
                 index_field,
             )
 

@@ -4,7 +4,7 @@ import unittest
 
 from bm257s.package_reader import parse_package
 
-from .helpers.raw_package_helpers import EXAMPLE_RAW_PKG
+from .helpers.raw_package_helpers import EXAMPLE_RAW_PKG, change_byte_index
 
 
 class TestPackageReader(unittest.TestCase):
@@ -24,4 +24,25 @@ class TestPackageParsing(unittest.TestCase):
     def test_example_package(self):
         """Test parsing with 'spec'-provided example package
         """
-        _ = parse_package(EXAMPLE_RAW_PKG)
+        # Example package should get parsed fine
+        try:
+            _ = parse_package(EXAMPLE_RAW_PKG)
+        except RuntimeError:
+            self.fail("Falsely detected error in raw example package")
+
+    def test_index_checking(self):
+        self.assertRaises(
+            RuntimeError,
+            lambda _: parse_package(change_byte_index(EXAMPLE_RAW_PKG, 0, 1)),
+            "Detect incremented first byte index",
+        )
+        self.assertRaises(
+            RuntimeError,
+            lambda _: parse_package(change_byte_index(EXAMPLE_RAW_PKG, 14, 13)),
+            "Detect decremented last byte index",
+        )
+        self.assertRaises(
+            RuntimeError,
+            lambda _: parse_package(change_byte_index(EXAMPLE_RAW_PKG, 7, 12)),
+            "Detect changed byte index in middle of package",
+        )
