@@ -45,14 +45,77 @@ class Package:
     :type symbol: set
     """
 
-    # pylint: disable=R0903
-    # Remove this once usage becomes clearer
-
     def __init__(self, segments, dots, minus, symbols):
         self.segments = segments
         self.dots = dots
         self.minus = minus
         self.symbols = symbols
+
+    def segment_character(self, pos):
+        """Read character from segment display
+
+        :param pos: Number of digit to read
+        :type pos: int
+
+        :return: Character shown by segment
+        :rtype: str
+        :raise RuntimeError: If the segment doesn't show a character
+        """
+
+        character_segments = {
+            (True, True, True, True, True, True, False): "0",
+            (False, True, True, False, False, False, False): "1",
+            (True, True, False, True, True, False, True): "2",
+            (True, True, True, True, False, False, True): "3",
+            (False, True, True, False, False, True, True): "4",
+            (True, False, True, True, False, True, True): "5",
+            (True, False, True, True, True, True, True): "6",
+            (True, True, True, False, False, False, False): "7",
+            (True, True, True, True, True, True, True): "8",
+            (True, True, True, True, False, True, True): "9",
+            (True, False, False, True, True, True, False): "C",
+            (True, False, False, False, True, True, True): "F",
+            (False, False, False, False, False, False, True): "-",
+            (False, False, False, False, False, False, False): " ",
+            (False, False, False, True, True, True, False): "L",
+        }
+
+        if self.segments[pos] in character_segments:
+            return character_segments[self.segments[pos]]
+
+        raise RuntimeError(f"Cannot read character from segment {pos}")
+
+    def segment_string(self, start_i=0, end_i=3, use_dots=True, use_minus=True):
+        """Read segment string value from segment display
+
+        :param start_i: First digit to consider
+        :type start_i: int
+        :param end_i: Last digit to consider
+        :type end_i: int
+        :param use_dots: Whether to include dots if present
+        :type use_dots: bool
+        :param use_minus: Whether to include minus if present
+        :type use_minus: bool
+
+        :return: String formed by segment display
+        :rtype: str
+        :raise RuntimeError: If the segment display contains invalid characters
+        """
+        if use_minus and self.minus:
+            result = "-"
+        else:
+            result = ""
+
+        # Go through first three segments so we can do chars + dots together
+        for i in range(start_i, end_i):
+            result += self.segment_character(i)
+
+            if use_dots:
+                result += "." if self.dots[i] else ""
+
+        result += self.segment_character(end_i)
+
+        return result
 
 
 def parse_segment(data, pos):

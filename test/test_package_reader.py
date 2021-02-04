@@ -31,6 +31,11 @@ class TestPackageParsing(unittest.TestCase):
             {Symbol.AUTO, Symbol.AC, Symbol.VOLT, Symbol.SCALE},
             "Read correct symbols from example package",
         )
+        self.assertEqual(
+            pkg.segment_string(),
+            "513.6",
+            "Read correct segment string from example package",
+        )
 
     def test_index_checking(self):
         self.assertRaises(
