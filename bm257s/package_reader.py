@@ -58,7 +58,19 @@ def parse_package(data):
 
     :param data: Raw multimeter data, aligned to 15-byte boundary
     :type data: bytes
+    :raise RuntimeError: If package contains invalid data
     """
+
+    # Check byte indices
+    index_mask = ((1 << 5) - 1) << 4
+    for (i, d_i) in enumerate(data[1:]):
+        index_field = (d_i & index_mask) >> 4
+        if index_field != (i + 1):
+            raise RuntimeError(
+                f"Raw data package contains invalid byte index at byte {i + 1}",
+                index_field,
+            )
+
     segments = []
     dots = []
     symbols = []
