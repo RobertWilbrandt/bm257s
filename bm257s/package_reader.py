@@ -120,7 +120,7 @@ def parse_symbols(data):
             # Go through symbol bits
             for j in range(0, 4):
                 if data[i] & (1 << j):
-                    result.append(symbol_positions[i][j])
+                    result.append(symbol_positions[i][3 - j])
 
     return result
 

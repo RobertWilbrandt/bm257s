@@ -2,7 +2,7 @@
 
 import unittest
 
-from bm257s.package_reader import parse_package
+from bm257s.package_reader import Symbol, parse_package
 
 from .helpers.raw_package_helpers import EXAMPLE_RAW_PKG, change_byte_index
 
@@ -22,9 +22,15 @@ class TestPackageParsing(unittest.TestCase):
         """Test parsing with 'spec'-provided example package"""
         # Example package should get parsed fine
         try:
-            _ = parse_package(EXAMPLE_RAW_PKG)
+            pkg = parse_package(EXAMPLE_RAW_PKG)
         except RuntimeError:
             self.fail("Falsely detected error in raw example package")
+
+        self.assertEqual(
+            pkg.symbols,
+            {Symbol.AUTO, Symbol.AC, Symbol.VOLT, Symbol.SCALE},
+            "Read correct symbols from example package",
+        )
 
     def test_index_checking(self):
         self.assertRaises(
