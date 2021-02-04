@@ -48,10 +48,93 @@ class Package:
     # pylint: disable=R0903
     # Remove this once usage becomes clearer
 
-    def __init__(self, segments, dots, symbols):
+    def __init__(self, segments, dots, minus, symbols):
         self.segments = segments
         self.dots = dots
+        self.minus = minus
         self.symbols = symbols
+
+
+def parse_segment(data, pos):
+    """Parses a single 7-segment digit from raw multimeter data
+
+    :param data: Raw multimeter data, aligned to 15-byte boundary
+    :type data: bytes
+    :param pos: Number of segment to parse (numbered left to right)
+    :type pos: int
+
+    :return: 7-segment digit configuration
+    :rtype: tuple
+    """
+    start_i = 3 + 2 * pos
+    return (
+        bool(data[start_i] & (1 << 3)),  # A
+        bool(data[start_i + 1] & (1 << 3)),  # B
+        bool(data[start_i + 1] & (1 << 1)),  # C
+        bool(data[start_i + 1] & 1),  # D
+        bool(data[start_i] & (1 << 1)),  # E
+        bool(data[start_i] & (1 << 2)),  # F
+        bool(data[start_i + 1] & (1 << 2)),  # G
+    )
+
+
+def parse_dot(data, pos):
+    """Parses a single dot from raw multimeter data
+
+    :param data: Raw multimeter data, aligned to 15-byte boundary
+    :type data: bytes
+    :param pos: Number of dot to parse (numbered left to right)
+    :type pos: int
+
+    :return: Whether dot is on
+    :rtype: bool
+    """
+    return bool(data[5 + 2 * pos] & 1)
+
+
+def parse_symbols(data):
+    """Parses symbols from raw multimeter data
+
+    :param data: Raw multimeter data, aligned to 15-byte boundary
+    :type data: bytes
+
+    :return: List of shown symbols
+    :rtype: list
+    """
+    symbol_positions = {
+        1: (Symbol.AUTO, Symbol.DC, Symbol.AC, Symbol.REL),
+        2: (Symbol.BEEP, Symbol.BATTERY, Symbol.LOZ, Symbol.BMINUS),
+        11: (Symbol.HOLD, Symbol.DBM, Symbol.MEGA, Symbol.KILO),
+        12: (Symbol.CREST, Symbol.OHM, Symbol.HZ, Symbol.NANO),
+        13: (Symbol.MAX, Symbol.FARAD, Symbol.MICRO, Symbol.MILLI),
+        14: (Symbol.MIN, Symbol.VOLT, Symbol.AMPERE, Symbol.SCALE),
+    }
+
+    result = []
+    # Go through all bytes
+    for i in range(0, 15):
+
+        # Skip segment display section
+        if i in symbol_positions:
+
+            # Go through symbol bits
+            for j in range(0, 4):
+                if data[i] & (1 << j):
+                    result.append(symbol_positions[i][j])
+
+    return result
+
+
+def parse_minus(data):
+    """Parse minus sign from raw multimeter data
+
+    :param data: Raw multimeter data, aligned to 15-byte boundary
+    :type data: bytes
+
+    :return: Whether minus is on
+    :rtype: bool
+    """
+    return bool(data[3] & 1)
 
 
 def parse_package(data):
@@ -72,10 +155,11 @@ def parse_package(data):
                 index_field,
             )
 
-    segments = []
-    dots = []
-    symbols = []
-    return Package(segments, dots, set(symbols))
+    segments = [parse_segment(data, i) for i in range(0, 4)]
+    dots = [parse_dot(data, i) for i in range(0, 3)]
+    minus = parse_minus(data)
+    symbols = parse_symbols(data)
+    return Package(segments, dots, minus, set(symbols))
 
 
 class PackageReader:
