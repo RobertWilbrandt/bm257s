@@ -43,4 +43,4 @@ jobs:
           pip install tox
 
       - name: Run linters with tox
-        run: tox -e flake8,pylint
+        run: tox -e flake8,pylint,black,isort

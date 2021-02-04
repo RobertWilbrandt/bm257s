@@ -172,8 +172,7 @@ class SegmentString:
 
 
 class BM257sLCD:
-    """Representation of bm257s lcd display
-    """
+    """Representation of bm257s lcd display"""
 
     SEGMENT_VALUES = {
         (True, True, True, True, True, True, False): "0",

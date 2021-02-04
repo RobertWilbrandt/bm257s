@@ -8,22 +8,18 @@ from .helpers.raw_package_helpers import EXAMPLE_RAW_PKG, change_byte_index
 
 
 class TestPackageReader(unittest.TestCase):
-    """Testcase for package reader unit tests
-    """
+    """Testcase for package reader unit tests"""
 
     def test_success(self):
-        """Test of successfull test
-        """
+        """Test of successfull test"""
         self.assertEqual("foo".upper(), "FOO")
 
 
 class TestPackageParsing(unittest.TestCase):
-    """Testcase for parsing of raw data packages
-    """
+    """Testcase for parsing of raw data packages"""
 
     def test_example_package(self):
-        """Test parsing with 'spec'-provided example package
-        """
+        """Test parsing with 'spec'-provided example package"""
         # Example package should get parsed fine
         try:
             _ = parse_package(EXAMPLE_RAW_PKG)

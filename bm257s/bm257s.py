@@ -2,8 +2,12 @@
 import serial
 
 from .lcd import BM257sLCD
-from .measurement import (Measurement, ResistanceMeasurement,
-                          TemperatureMeasurement, VoltageMeasurement)
+from .measurement import (
+    Measurement,
+    ResistanceMeasurement,
+    TemperatureMeasurement,
+    VoltageMeasurement,
+)
 
 
 def parse_lcd(lcd):
@@ -124,8 +128,7 @@ class BM257sSerialInterface:
         return parse_lcd(self._lcd)
 
     def close(self):
-        """Closes the used serial port
-        """
+        """Closes the used serial port"""
         self._serial.close()
 
     def __enter__(self):

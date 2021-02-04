@@ -4,8 +4,7 @@
 
 
 class Measurement:
-    """Generic measurement representation
-    """
+    """Generic measurement representation"""
 
     def __init__(self):
         pass

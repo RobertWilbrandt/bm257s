@@ -4,8 +4,7 @@ import threading
 
 
 class Symbol(enum.Enum):
-    """Enumeration of all LCD symbols
-    """
+    """Enumeration of all LCD symbols"""
 
     AUTO = enum.auto()
     DC = enum.auto()
