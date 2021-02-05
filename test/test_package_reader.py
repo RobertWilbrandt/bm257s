@@ -25,8 +25,6 @@ class TestPackageReader(unittest.TestCase):
         cls._mock_reader = MockDataReader()
         cls._pkg_reader = PackageReader(cls._mock_reader)
 
-        cls._pkg_reader.start()
-
     def setUp(self):
         """Set up package reader to get tested"""
         super().setUp()
@@ -36,18 +34,50 @@ class TestPackageReader(unittest.TestCase):
             msg="Mock data should be empty before test start",
         )
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._pkg_reader.stop()
+        self._pkg_reader.start()
 
     def tearDown(self):
         """Stop package reader"""
         super().tearDown()
 
+        self._pkg_reader.stop()
         self.assertTrue(
             self._mock_reader.all_data_used(),
             msg="Mock data should be empty after test end",
         )
+
+    def test_reader_restart(self):
+        """Test restart behavior of package reader"""
+        self._mock_reader.set_next_data(EXAMPLE_RAW_PKG)
+        self.assertTrue(
+            self._pkg_reader.wait_for_package(self.READER_TIMEOUT),
+            msg="Reader should read package from input",
+        )
+        self.assertTrue(
+            self._mock_reader.all_data_used(),
+            "Reader should read all input data to get a package",
+        )
+
+        self._pkg_reader.stop()
+
+        self._pkg_reader.start()
+
+        # Should not keep any package lying around
+        self.assertIsNone(
+            self._pkg_reader.next_package(), msg="Restart should clear read packages"
+        )
+
+        # But should read new packages again
+        self._mock_reader.set_next_data(EXAMPLE_RAW_PKG)
+        self.assertTrue(
+            self._pkg_reader.wait_for_package(self.READER_TIMEOUT),
+            msg="Package reader reads new package after restart",
+        )
+        pkg = self._pkg_reader.next_package()
+        self.assertIsNotNone(
+            pkg, msg="Successfull waiting after reastart should yield a package"
+        )
+        check_example_pkg(self, pkg)
 
     def test_example_package(self):
         """Test parsing with 'spec'-provided example package"""

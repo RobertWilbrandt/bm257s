@@ -273,6 +273,9 @@ class PackageReader:
 
         Call this at most once until you call stop().
         """
+        self._received_pkg.clear()
+        self._last_pkg = None
+
         self._read_thread_stop.clear()
         self._read_thread.start()
 
@@ -283,6 +286,8 @@ class PackageReader:
         """
         self._read_thread_stop.set()
         self._read_thread.join()
+
+        self._read_thread = threading.Thread(target=self._run)
 
     def wait_for_package(self, timeout):
         """Wait until a new package is received
