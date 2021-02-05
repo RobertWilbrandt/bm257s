@@ -43,6 +43,7 @@ class TestPackageParsing(unittest.TestCase):
         )
 
     def test_index_checking(self):
+        """Test checking of byte indices in raw packages"""
         self.assertRaises(
             RuntimeError,
             lambda _: parse_package(change_byte_index(EXAMPLE_RAW_PKG, 0, 1)),
