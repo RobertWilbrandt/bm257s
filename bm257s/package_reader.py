@@ -267,6 +267,8 @@ class PackageReader:
         self._last_pkg = None
         self._last_pkg_lock = threading.Lock()
 
+        self._received_pkg = threading.Event()
+
     def start(self):
         """Start reading packages in a seperate thread
 
@@ -283,6 +285,17 @@ class PackageReader:
         self._read_thread_stop.set()
         self._read_thread.join()
 
+    def wait_for_package(self, timeout):
+        """Wait until a new package is received
+
+        :param timeout: Maximum time to wait in seconds
+        :type timeout: float
+
+        :return: Whether a package was received during the given time
+        :rtype: bool
+        """
+        return self._received_pkg.wait(timeout)
+
     def next_package(self):
         """Returns the last received package and removes it from storage
 
@@ -292,6 +305,9 @@ class PackageReader:
         with self._last_pkg_lock:
             result = self._last_pkg
             self._last_pkg = None
+
+            self._received_pkg.clear()
+
             return result
 
     def _run(self):
@@ -308,3 +324,4 @@ class PackageReader:
                 pkg = parse_package(data[0 : self.PKG_LEN + 1])  # noqa: E203
                 with self._last_pkg_lock:
                     self._last_pkg = pkg
+                    self._received_pkg.set()
