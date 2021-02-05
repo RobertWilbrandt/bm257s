@@ -2,14 +2,22 @@
 
 import unittest
 
-from bm257s.package_reader import PackageReader, Symbol, parse_package
+from bm257s.package_reader import PackageReader, parse_package
 
 from .helpers.mock_data_reader import MockDataReader
-from .helpers.raw_package_helpers import EXAMPLE_RAW_PKG, change_byte_index
+from .helpers.raw_package_helpers import (
+    EXAMPLE_RAW_PKG,
+    EXAMPLE_RAW_PKG_STRING,
+    EXAMPLE_RAW_PKG_SYMBOLS,
+    EXAMPLE_RAW_PKG_VALUE,
+    change_byte_index,
+)
 
 
 class TestPackageReader(unittest.TestCase):
     """Testcase for package reader unit tests"""
+
+    READER_TIMEOUT = 0.1
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,6 +37,33 @@ class TestPackageReader(unittest.TestCase):
 
         self._pkg_reader.stop()
 
+    def test_example_package(self):
+        """Test parsing with 'spec'-provided example package"""
+        self.assertTrue(
+            self._mock_reader.all_data_used,
+            "Mock data should be empty before test start",
+        )
+
+        self._mock_reader.set_next_data(EXAMPLE_RAW_PKG)
+        self.assertTrue(
+            self._pkg_reader.wait_for_package(self.READER_TIMEOUT),
+            "Read package data from raw data reader",
+        )
+        pkg = self._pkg_reader.next_package()
+        self.assertIsNotNone(pkg, "Package could get parsed fully")
+        self.assertTrue(self._mock_reader.all_data_used)
+
+        self.assertEqual(
+            pkg.symbols,
+            EXAMPLE_RAW_PKG_SYMBOLS,
+            msg="Read correct symbols from example package",
+        )
+        self.assertEqual(
+            pkg.segment_string(),
+            EXAMPLE_RAW_PKG_STRING,
+            msg="Read correct string from example package",
+        )
+
 
 class TestPackageParsing(unittest.TestCase):
     """Testcase for parsing of raw data packages"""
@@ -43,17 +78,17 @@ class TestPackageParsing(unittest.TestCase):
 
         self.assertEqual(
             pkg.symbols,
-            {Symbol.AUTO, Symbol.AC, Symbol.VOLT, Symbol.SCALE},
+            EXAMPLE_RAW_PKG_SYMBOLS,
             "Read correct symbols from example package",
         )
         self.assertEqual(
             pkg.segment_string(),
-            "513.6",
+            EXAMPLE_RAW_PKG_STRING,
             "Read correct segment string from example package",
         )
         self.assertAlmostEqual(
             pkg.segment_float(),
-            513.6,
+            EXAMPLE_RAW_PKG_VALUE,
             msg="Read correct float number from example package",
         )
 
