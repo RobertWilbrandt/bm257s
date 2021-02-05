@@ -289,6 +289,14 @@ class PackageReader:
 
         self._read_thread = threading.Thread(target=self._run)
 
+    def is_running(self):
+        """Check if the reader is currently running
+
+        :return: Whether reader is currently running
+        :rtype: bool
+        """
+        return self._read_thread.is_alive()
+
     def wait_for_package(self, timeout):
         """Wait until a new package is received
 
@@ -337,6 +345,7 @@ class PackageReader:
                     read_next = self.PKG_LEN
 
                     pkg = parse_package(data[0 : self.PKG_LEN])  # noqa: E203
+                    data = data[self.PKG_LEN :]  # noqa: E203
                     with self._last_pkg_lock:
                         self._last_pkg = pkg
                         self._received_pkg.set()

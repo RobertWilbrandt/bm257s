@@ -57,10 +57,20 @@ class TestPackageReader(unittest.TestCase):
             self._mock_reader.all_data_used(),
             "Reader should read all input data to get a package",
         )
+        self.assertTrue(
+            self._pkg_reader.is_running(), "Reader should normally be running"
+        )
 
+        # Stop reader
         self._pkg_reader.stop()
+        self.assertFalse(
+            self._pkg_reader.is_running(), "Reader should not be running after stop"
+        )
 
         self._pkg_reader.start()
+        self.assertTrue(
+            self._pkg_reader.is_running(), "Reader should be running again after start"
+        )
 
         # Should not keep any package lying around
         self.assertIsNone(
