@@ -5,6 +5,7 @@
 import curses
 import datetime
 import sys
+import time
 
 import bm257s
 
@@ -78,6 +79,8 @@ def main(stdscr, interface):
         win_meas.refresh()
         win_status.refresh()
         win_conn.refresh()
+
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":

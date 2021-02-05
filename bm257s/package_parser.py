@@ -1,5 +1,6 @@
 """Parse package content to obtain measurement result"""
 
+from .measurement import Measurement, VoltageMeasurement
 from .package_reader import Symbol
 
 
@@ -12,7 +13,14 @@ def parse_voltage(pkg):
     :return: Multimeter measurement type and measurement
     :rtype: tuple
     """
-    raise NotImplementedError("Type of measurement is not yet supported")
+    value = pkg.segment_float()
+
+    if Symbol.AC in pkg.symbols:
+        current = VoltageMeasurement.CURRENT_AC
+    elif Symbol.DC in pkg.symbols:
+        current = VoltageMeasurement.CURRENT_DC
+
+    return (Measurement.VOLTAGE, VoltageMeasurement(value=value, current=current))
 
 
 def parse_current(pkg):
