@@ -20,28 +20,37 @@ class TestPackageReader(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    @classmethod
+    def setUpClass(cls):
+        cls._mock_reader = MockDataReader()
+        cls._pkg_reader = PackageReader(cls._mock_reader)
+
+        cls._pkg_reader.start()
+
     def setUp(self):
         """Set up package reader to get tested"""
         super().setUp()
 
-        self._mock_reader = MockDataReader()
-        self._pkg_reader = PackageReader(self._mock_reader)
+        self.assertTrue(
+            self._mock_reader.all_data_used(),
+            msg="Mock data should be empty before test start",
+        )
 
-        self._pkg_reader.start()
+    @classmethod
+    def tearDownClass(cls):
+        cls._pkg_reader.stop()
 
     def tearDown(self):
         """Stop package reader"""
         super().tearDown()
 
-        self._pkg_reader.stop()
+        self.assertTrue(
+            self._mock_reader.all_data_used(),
+            msg="Mock data should be empty after test end",
+        )
 
     def test_example_package(self):
         """Test parsing with 'spec'-provided example package"""
-        self.assertTrue(
-            self._mock_reader.all_data_used,
-            "Mock data should be empty before test start",
-        )
-
         self._mock_reader.set_next_data(EXAMPLE_RAW_PKG)
         self.assertTrue(
             self._pkg_reader.wait_for_package(self.READER_TIMEOUT),
