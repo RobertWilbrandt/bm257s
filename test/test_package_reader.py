@@ -2,17 +2,32 @@
 
 import unittest
 
-from bm257s.package_reader import Symbol, parse_package
+from bm257s.package_reader import PackageReader, Symbol, parse_package
 
+from .helpers.mock_data_reader import MockDataReader
 from .helpers.raw_package_helpers import EXAMPLE_RAW_PKG, change_byte_index
 
 
 class TestPackageReader(unittest.TestCase):
     """Testcase for package reader unit tests"""
 
-    def test_success(self):
-        """Test of successfull test"""
-        self.assertEqual("foo".upper(), "FOO")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def setUp(self):
+        """Set up package reader to get tested"""
+        super().setUp()
+
+        self._mock_reader = MockDataReader()
+        self._pkg_reader = PackageReader(self._mock_reader)
+
+        self._pkg_reader.start()
+
+    def tearDown(self):
+        """Stop package reader"""
+        super().tearDown()
+
+        self._pkg_reader.stop()
 
 
 class TestPackageParsing(unittest.TestCase):
