@@ -230,7 +230,6 @@ def parse_package(data):
     :type data: bytes
     :raise RuntimeError: If package contains invalid data
     """
-
     # Check byte indices
     index_mask = ((1 << 5) - 1) << 4
     for (i, d_i) in enumerate(data):
@@ -312,16 +311,27 @@ class PackageReader:
 
     def _run(self):
         data = bytes()
+        read_next = self.PKG_LEN
+
         while not self._read_thread_stop.is_set():
-            data = data + self._reader.read(self.PKG_LEN)
+            # Read new data from reader
+            new_data = self._reader.read(read_next)
 
-            for (i, byte) in enumerate(data):
-                if byte == self.PKG_START:
-                    data = data[i:]
-                    break
+            if len(new_data) > 0:
 
-            if len(data) >= self.PKG_LEN:
-                pkg = parse_package(data[0 : self.PKG_LEN + 1])  # noqa: E203
-                with self._last_pkg_lock:
-                    self._last_pkg = pkg
-                    self._received_pkg.set()
+                # Find package start and perform alignment with it
+                data = data + new_data
+                for (i, byte) in enumerate(data):
+                    if byte == self.PKG_START:
+                        data = data[i:]
+                        read_next = self.PKG_LEN - len(data)
+                        break
+
+                # Parse package
+                if len(data) >= self.PKG_LEN:
+                    read_next = self.PKG_LEN
+
+                    pkg = parse_package(data[0 : self.PKG_LEN])  # noqa: E203
+                    with self._last_pkg_lock:
+                        self._last_pkg = pkg
+                        self._received_pkg.set()

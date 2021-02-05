@@ -7,10 +7,8 @@ from bm257s.package_reader import PackageReader, parse_package
 from .helpers.mock_data_reader import MockDataReader
 from .helpers.raw_package_helpers import (
     EXAMPLE_RAW_PKG,
-    EXAMPLE_RAW_PKG_STRING,
-    EXAMPLE_RAW_PKG_SYMBOLS,
-    EXAMPLE_RAW_PKG_VALUE,
     change_byte_index,
+    check_example_pkg,
 )
 
 
@@ -53,16 +51,38 @@ class TestPackageReader(unittest.TestCase):
         self.assertIsNotNone(pkg, "Package could get parsed fully")
         self.assertTrue(self._mock_reader.all_data_used)
 
-        self.assertEqual(
-            pkg.symbols,
-            EXAMPLE_RAW_PKG_SYMBOLS,
-            msg="Read correct symbols from example package",
-        )
-        self.assertEqual(
-            pkg.segment_string(),
-            EXAMPLE_RAW_PKG_STRING,
-            msg="Read correct string from example package",
-        )
+        check_example_pkg(self, pkg)
+
+    def test_misaligned_package(self):
+        """Test alignment handling of package parser"""
+        misaligned_data = {
+            1: (EXAMPLE_RAW_PKG[14:15] + EXAMPLE_RAW_PKG),
+            9: (EXAMPLE_RAW_PKG[9:15] + EXAMPLE_RAW_PKG),
+            14: (EXAMPLE_RAW_PKG[1:15] + EXAMPLE_RAW_PKG),
+        }
+
+        for misalignment, data in misaligned_data.items():
+            self.assertTrue(
+                self._mock_reader.all_data_used,
+                "Mock data should be empty before test start",
+            )
+
+            self._mock_reader.set_next_data(data)
+            self.assertTrue(
+                self._pkg_reader.wait_for_package(self.READER_TIMEOUT),
+                f"Read package from raw data reader (misaligned by {misalignment})",
+            )
+            pkg = self._pkg_reader.next_package()
+            self.assertIsNotNone(
+                pkg, f"Package could not get parsed (misaligned by {misalignment})"
+            )
+            self.assertTrue(
+                self._mock_reader.all_data_used,
+                msg="Did not read all data from package (misaligned by "
+                f"{misalignment})",
+            )
+
+            check_example_pkg(self, pkg)
 
 
 class TestPackageParsing(unittest.TestCase):
@@ -76,21 +96,7 @@ class TestPackageParsing(unittest.TestCase):
         except RuntimeError:
             self.fail("Falsely detected error in raw example package")
 
-        self.assertEqual(
-            pkg.symbols,
-            EXAMPLE_RAW_PKG_SYMBOLS,
-            "Read correct symbols from example package",
-        )
-        self.assertEqual(
-            pkg.segment_string(),
-            EXAMPLE_RAW_PKG_STRING,
-            "Read correct segment string from example package",
-        )
-        self.assertAlmostEqual(
-            pkg.segment_float(),
-            EXAMPLE_RAW_PKG_VALUE,
-            msg="Read correct float number from example package",
-        )
+        check_example_pkg(self, pkg)
 
     def test_index_checking(self):
         """Test checking of byte indices in raw packages"""

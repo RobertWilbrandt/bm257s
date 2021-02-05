@@ -9,6 +9,31 @@ EXAMPLE_RAW_PKG_STRING = "513.6"
 EXAMPLE_RAW_PKG_VALUE = 513.6
 
 
+def check_example_pkg(test_case, pkg):
+    """Check and assert correctness of parsed example package
+
+    :param test_case: Test case to assert from
+    :type test_case: unittest.TestCase
+    :param pkg: Package to check
+    :type pkg: bm257s.package_reader.Package
+    """
+    test_case.assertSetEqual(
+        pkg.symbols,
+        EXAMPLE_RAW_PKG_SYMBOLS,
+        msg="Read correct symbols from example package",
+    )
+    test_case.assertEqual(
+        pkg.segment_string(),
+        EXAMPLE_RAW_PKG_STRING,
+        msg="Read correct string from example package",
+    )
+    test_case.assertAlmostEqual(
+        pkg.segment_float(),
+        EXAMPLE_RAW_PKG_VALUE,
+        msg="Read correct float number from example package",
+    )
+
+
 def change_byte_index(data, pos, index):
     """Changes the byte index at a specific position in a package to a different value
 
