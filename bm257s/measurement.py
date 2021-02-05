@@ -4,18 +4,24 @@
 
 
 class Measurement:
-    """Generic measurement representation"""
+    """Generic measurement representation
 
-    def __init__(self):
-        pass
-
-    TEMPERATURE = "TEMPERATURE"
-    RESISTANCE = "RESISTANCE"
-    VOLTAGE = "VOLTAGE"
+    :param prefix: Metric prefix of measurement
+    :type prefix: str
+    """
 
     PREFIX_NONE = ""
     PREFIX_KILO = "k"
     PREFIX_MEGA = "M"
+    PREFIX_MILLI = "m"
+    PREFIX_MICRO = "u"
+
+    def __init__(self, prefix=PREFIX_NONE):
+        self.prefix = prefix
+
+    TEMPERATURE = "TEMPERATURE"
+    RESISTANCE = "RESISTANCE"
+    VOLTAGE = "VOLTAGE"
 
 
 class TemperatureMeasurement(Measurement):
@@ -25,6 +31,8 @@ class TemperatureMeasurement(Measurement):
     :type unit: int
     :param value: Measured temperature or None if no probe is connected
     :type value: int
+    :param prefix: Metric prefix of measurement
+    :type prefix: str
     """
 
     UNIT_CELSIUS = 1
@@ -58,9 +66,8 @@ class ResistanceMeasurement(Measurement):
 
     def __init__(self, value, prefix=Measurement.PREFIX_NONE):
         self.value = value
-        self.prefix = prefix
 
-        super().__init__()
+        super().__init__(prefix)
 
     def __str__(self):
         if self.value is not None:
@@ -76,17 +83,19 @@ class VoltageMeasurement(Measurement):
     :type value: float
     :param current: Type of current measured
     :type current: int
+    :param prefix: Metrix prefix of measurement
+    :type prefix: int
     """
 
     CURRENT_AC = 1
     CURRENT_DC = 2
 
-    def __init__(self, value, current):
+    def __init__(self, value, current, prefix=Measurement.PREFIX_NONE):
         self.value = value
         self.current = current
 
-        super().__init__()
+        super().__init__(prefix)
 
     def __str__(self):
         current_postfix = {self.CURRENT_AC: " [~]", self.CURRENT_DC: ""}
-        return f"{self.value}V{current_postfix[self.current]}"
+        return f"{self.value}{self.prefix}V{current_postfix[self.current]}"

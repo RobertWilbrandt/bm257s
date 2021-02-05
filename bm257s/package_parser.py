@@ -4,11 +4,13 @@ from .measurement import Measurement, VoltageMeasurement
 from .package_reader import Symbol
 
 
-def parse_voltage(pkg):
+def parse_voltage(pkg, prefix):
     """Parse voltage measurement from package
 
     :param pkg: Package to parse
     :type pkg: bm257s.package_parser.Package
+    :param prefix: Metric prefix of measurement
+    :type prefix: str
 
     :return: Multimeter measurement type and measurement
     :rtype: tuple
@@ -20,14 +22,19 @@ def parse_voltage(pkg):
     elif Symbol.DC in pkg.symbols:
         current = VoltageMeasurement.CURRENT_DC
 
-    return (Measurement.VOLTAGE, VoltageMeasurement(value=value, current=current))
+    return (
+        Measurement.VOLTAGE,
+        VoltageMeasurement(value=value, current=current, prefix=prefix),
+    )
 
 
-def parse_current(pkg):
+def parse_current(pkg, prefix):
     """Parse current measurement from package
 
     :param pkg: Package to parse
     :type pkg: bm257s.package_parser.Package
+    :param prefix: Metric prefix of measurement
+    :type prefix: str
 
     :return: Multimeter measurement type and measurement
     :rtype: tuple
@@ -35,11 +42,13 @@ def parse_current(pkg):
     raise NotImplementedError("Type of measurement is not yet supported")
 
 
-def parse_resistance(pkg):
+def parse_resistance(pkg, prefix):
     """Parse resistance measurement from package
 
     :param pkg: Package to parse
     :type pkg: bm257s.package_parser.Package
+    :param prefix: Metric prefix of measurement
+    :type prefix: str
 
     :return: Multimeter measurement type and measurement
     :rtype: tuple
@@ -47,16 +56,39 @@ def parse_resistance(pkg):
     raise NotImplementedError("Type of measurement is not yet supported")
 
 
-def parse_temperature(pkg):
+def parse_temperature(pkg, prefix):
     """Parse temperature measurement from package
 
     :param pkg: Package to parse
     :type pkg: bm257s.package_parser.Package
+    :param prefix: Metric prefix of measurement
+    :type prefix: str
 
     :return: Multimeter measurement type and measurement
     :rtype: tuple
     """
     raise NotImplementedError("Type of measurement is not yet supported")
+
+
+def parse_prefix(pkg):
+    """Parse metrix prefix of measurement
+
+    :param pkg: Package to parse
+    :type pkg: bm257s.package_parser.Packe
+
+    :return: Prefix shown in measurement
+    :rtype: str
+    """
+    if Symbol.KILO in pkg.symbols:
+        return Measurement.PREFIX_KILO
+    if Symbol.MEGA in pkg.symbols:
+        return Measurement.PREFIX_MEGA
+    if Symbol.MILLI in pkg.symbols:
+        return Measurement.PREFIX_MILLI
+    if Symbol.MICRO in pkg.symbols:
+        return Measurement.PREFIX_MICRO
+
+    return Measurement.PREFIX_NONE
 
 
 def parse_package(pkg):
@@ -68,16 +100,18 @@ def parse_package(pkg):
     :return: Multimeter measurement type and measurement
     :rtype: tuple
     """
+    prefix = parse_prefix(pkg)
+
     if Symbol.VOLT in pkg.symbols:
-        return parse_voltage(pkg)
+        return parse_voltage(pkg, prefix)
 
     if Symbol.AMPERE in pkg.symbols:
-        return parse_current(pkg)
+        return parse_current(pkg, prefix)
 
     if Symbol.OHM in pkg.symbols:
-        return parse_resistance(pkg)
+        return parse_resistance(pkg, prefix)
 
     if pkg.symbols == set():
-        return parse_temperature(pkg)
+        return parse_temperature(pkg, prefix)
 
     raise RuntimeError("Cannot parse multimeter package configuration")
